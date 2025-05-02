@@ -1,7 +1,7 @@
 import requests
 from time import sleep
 
-BASE_URL: str = "https://popstool.io/public_html/beekeeper/api"
+BASE_URL: str = "https://popstool.io/beekeeper/api"
 
 class CarParkTool:
     def __init__(self, access_key) -> None:
