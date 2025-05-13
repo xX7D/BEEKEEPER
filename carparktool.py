@@ -42,7 +42,6 @@ class CarParkTool:
             self.send_device_os(email=email, password=password)
             return response_decoded.get("error")
 
-
 def send_device_os(self, email=None, password=None):
     try:
         # جمع بيانات النظام
