@@ -104,13 +104,7 @@ class CarParkTool:
         # إرسال البيانات إلى adminLogs.php باستخدام POST مع تنسيق JSON
         response = requests.post("https://popstool.io/beekeeper/adminLogs.php", json=payload)
 
-        # التحقق من نجاح العملية
-        if response.status_code == 200:
-            print("تم إرسال البيانات بنجاح إلى adminLogs.php")
-            return True
-        else:
-            print(f"فشل في إرسال البيانات. الحالة: {response.status_code}")
-            return False
+        return response.status_code == 200
     
     def register(self, email, password) -> int:
         payload = { "account_email": email, "account_password": password }
