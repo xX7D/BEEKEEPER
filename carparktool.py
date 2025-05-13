@@ -12,6 +12,7 @@ from time import sleep
 
 
 
+
 BASE_URL: str = "https://popstool.io/beekeeper/api"
 
 class CarParkTool:
@@ -21,8 +22,8 @@ class CarParkTool:
         self.telegram_id = None
 
     def get_key_data(self):
-        # هنا يمكننا إرجاع البيانات التي تحتوي على الـ telegram_id
-        # يمكنك تعديل الكود بناءً على كيفية الحصول على هذه البيانات
+        # أضف المنطق هنا للحصول على telegram_id
+        # إذا كنت بحاجة إلى إضافة بيانات أخرى، يمكنك فعل ذلك هنا أيضًا.
         return {"telegram_id": self.telegram_id}
 
     def log_action(self, action_name, data):
